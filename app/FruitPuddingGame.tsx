@@ -25,11 +25,13 @@ type Fly = {
   dy: number;
 };
 
+const ASSET_BASE = `${import.meta.env.BASE_URL || "/"}assets/`;
+
 const INFO: Record<FruitType, { name: string; src: string }> = {
-  melon: { name: "メロン", src: "/assets/melon.png" },
-  apple: { name: "りんご", src: "/assets/apple.png" },
-  banana: { name: "バナナ", src: "/assets/banana.png" },
-  grape: { name: "ぶどう", src: "/assets/grape.png" },
+  melon: { name: "メロン", src: `${ASSET_BASE}melon.png` },
+  apple: { name: "りんご", src: `${ASSET_BASE}apple.png` },
+  banana: { name: "バナナ", src: `${ASSET_BASE}banana.png` },
+  grape: { name: "ぶどう", src: `${ASSET_BASE}grape.png` },
 };
 
 const TYPES = Object.keys(INFO) as FruitType[];
@@ -70,7 +72,7 @@ export default function FruitPuddingGame() {
   const [isDragging, setIsDragging] = useState(false);
 
   const playSound = useCallback((kind: "ok" | "ng") => {
-    const audio = new Audio(`/assets/${kind}.m4a`);
+    const audio = new Audio(`${ASSET_BASE}${kind}.m4a`);
     audio.volume = 0.9;
     void audio.play().catch(() => undefined);
   }, []);
@@ -303,7 +305,7 @@ export default function FruitPuddingGame() {
     ctx.textAlign = "center";
     ctx.fillText("わたしの フルーツプリン", canvas.width / 2, 82);
 
-    const pudding = await loadImage("/assets/pudding.png");
+    const pudding = await loadImage(`${ASSET_BASE}pudding.png`);
     ctx.drawImage(pudding, 210, 150, 780, 630);
     const rect = stage.getBoundingClientRect();
     for (const fruit of tableFruits) {
@@ -377,7 +379,7 @@ export default function FruitPuddingGame() {
             <div className="pudding-stage" ref={stageRef}>
               <div className="sparkle sparkle-one">✦</div>
               <div className="sparkle sparkle-two">●</div>
-              <img className="pudding" src="/assets/pudding.png" alt="プリン" draggable={false} />
+              <img className="pudding" src={`${ASSET_BASE}pudding.png`} alt="プリン" draggable={false} />
               {tableFruits.filter((fruit) => decor[fruit.id]).map((fruit) => (
                 <button
                   key={fruit.id}
