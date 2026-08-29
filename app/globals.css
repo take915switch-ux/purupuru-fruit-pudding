@@ -1,0 +1,181 @@
+@import "tailwindcss";
+
+:root {
+  --cream: #fff8df;
+  --brown: #7d4421;
+  --orange: #ff9c30;
+  --green: #55ad57;
+  --shadow: 0 8px 0 rgba(126, 67, 31, 0.16);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; overscroll-behavior: none; }
+body {
+  color: #5c351d;
+  background:
+    radial-gradient(circle at 10% 8%, #ffe592 0 7%, transparent 7.2%),
+    radial-gradient(circle at 94% 20%, #ffb6b6 0 6%, transparent 6.2%),
+    linear-gradient(160deg, #fff8d9, #ffe5b2);
+  font-family: "Hiragino Maru Gothic ProN", "Yu Gothic", "Noto Sans JP", sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+button { font: inherit; }
+
+.game-shell { min-height: 100svh; padding: 12px clamp(8px, 2vw, 22px) 10px; overflow: hidden; touch-action: none; }
+.game-title {
+  margin: 0 auto 8px;
+  max-width: 980px;
+  text-align: center;
+  font-size: clamp(23px, 4vw, 42px);
+  line-height: 1.12;
+  font-weight: 900;
+  color: #7e3f1a;
+  letter-spacing: .04em;
+  text-shadow: 0 3px 0 white;
+}
+.game-title span { color: #ef6f61; }
+.game-card { width: min(980px, 100%); margin: auto; position: relative; }
+
+.playfield, .decorate-area {
+  position: relative;
+  height: clamp(410px, 61svh, 650px);
+  overflow: hidden;
+  border: 7px solid white;
+  border-radius: 28px 28px 16px 16px;
+  box-shadow: 0 9px 0 #e8b873, 0 14px 26px rgba(107, 62, 22, .18);
+  background:
+    radial-gradient(circle at 15% 20%, rgba(255,255,255,.82) 0 5px, transparent 6px),
+    radial-gradient(circle at 83% 35%, rgba(255,255,255,.75) 0 8px, transparent 9px),
+    linear-gradient(#c9f5ff, #e9fff0 68%, #c4ecb0 68%);
+}
+.playfield::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 32%; pointer-events: none;
+  background: repeating-linear-gradient(165deg, transparent 0 34px, rgba(76,157,76,.1) 35px 39px);
+}
+.instruction, .decorate-instruction {
+  position: absolute; z-index: 20; top: 12px; left: 50%; transform: translateX(-50%);
+  width: min(92%, 720px); min-height: 82px; padding: 10px 22px;
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  text-align: center; border: 5px solid #ffb448; border-radius: 30px;
+  background: rgba(255,255,255,.96); box-shadow: var(--shadow);
+  font-size: clamp(20px, 3.2vw, 34px); line-height: 1.35; color: #703a1d;
+}
+.instruction-star { color: #ffc400; flex: 0 0 auto; animation: twinkle 1.4s ease-in-out infinite alternate; }
+@keyframes twinkle { to { transform: scale(1.35) rotate(12deg); } }
+
+.bouncing-fruit {
+  position: absolute; z-index: 5; left: 0; top: 0; width: 76px; height: 76px; padding: 0;
+  border: 0; border-radius: 50%; background: transparent; cursor: pointer; will-change: transform;
+  filter: drop-shadow(0 7px 3px rgba(90,53,20,.25)); touch-action: none;
+}
+.bouncing-fruit img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+.bouncing-fruit:focus-visible { outline: 6px solid #ff7b23; outline-offset: 4px; }
+.fruit-wiggle { animation: wiggle .35s linear; }
+@keyframes wiggle { 25% { margin-left: -10px; } 50% { margin-left: 10px; } 75% { margin-left: -7px; } }
+
+.table-wrap { position: relative; z-index: 25; margin: -4px auto 0; width: 96%; height: 132px; }
+.table-edge { height: 16px; border-radius: 9px; background: #5f2f16; box-shadow: inset 0 3px 0 #b87037, 0 5px 0 rgba(74,36,14,.28); }
+.table-surface {
+  position: relative; z-index: 2; display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px;
+  min-height: 90px; padding: 4px 3%; border-radius: 0 0 18px 18px;
+  background: linear-gradient(90deg, #945027, #b36b35 48%, #914a23);
+  box-shadow: inset 0 5px 9px rgba(255,215,159,.22);
+}
+.table-slot { min-width: 0; display: grid; place-items: center; border-bottom: 3px solid rgba(91,41,16,.28); }
+.table-fruit { width: min(78px, 10vw); height: min(78px, 10vw); padding: 0; border: 0; background: transparent; filter: drop-shadow(0 5px 2px rgba(53,26,9,.3)); }
+.table-fruit img, .placed-fruit img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+.table-fruit.is-draggable { cursor: grab; animation: ready-drag 1.2s ease-in-out infinite alternate; touch-action: none; }
+@keyframes ready-drag { to { transform: translateY(-5px); } }
+.empty-slot { color: rgba(255,255,255,.35); font-size: 30px; }
+.table-legs { position: absolute; left: 7%; right: 7%; top: 98px; display: flex; justify-content: space-between; }
+.table-legs span { width: 32px; height: 30px; background: #6b351a; border-radius: 0 0 7px 7px; }
+
+.big-action {
+  position: relative; z-index: 40; display: block; border: 5px solid white; border-radius: 999px;
+  padding: 15px 30px; color: white; font-size: clamp(22px, 3.2vw, 34px); font-weight: 900;
+  line-height: 1.15; cursor: pointer; box-shadow: 0 7px 0 rgba(90,43,17,.28), 0 11px 20px rgba(90,43,17,.18);
+}
+.big-action:active:not(:disabled) { transform: translateY(5px); box-shadow: 0 2px 0 rgba(90,43,17,.28); }
+.decorate-button, .finish-button { margin: -34px auto 10px; background: linear-gradient(#ffad38, #f77b20); animation: button-pop .7s cubic-bezier(.2,1.7,.4,1); }
+@keyframes button-pop { from { transform: scale(.2) rotate(-5deg); opacity: 0; } }
+.finish-button:disabled { background: #aaa697; cursor: default; }
+
+.decorate-area { background: radial-gradient(circle at 50% 42%, #fff 0 12%, #fff6c9 45%, #ffd7b0 100%); }
+.decorate-instruction { font-weight: 900; }
+.pudding-stage { position: absolute; inset: 105px 8px 8px; overflow: hidden; border-radius: 24px; }
+.pudding { position: absolute; width: 73%; height: 78%; left: 13.5%; top: 9%; object-fit: contain; filter: drop-shadow(0 12px 6px rgba(99,50,20,.2)); pointer-events: none; }
+.placed-fruit {
+  position: absolute; z-index: 8; width: clamp(64px, 13vw, 92px); height: clamp(64px, 13vw, 92px);
+  padding: 0; border: 0; background: transparent; cursor: grab; touch-action: none;
+  filter: drop-shadow(0 5px 3px rgba(75,34,14,.25)); animation: fruit-land .35s cubic-bezier(.2,1.5,.4,1);
+}
+.placed-fruit:active { cursor: grabbing; transform: scale(1.08); }
+@keyframes fruit-land { from { transform: scale(.25); } }
+.sparkle { position: absolute; color: #ffb900; font-size: 42px; animation: twinkle 1s ease-in-out infinite alternate; }
+.sparkle-one { left: 8%; top: 20%; }.sparkle-two { right: 8%; top: 30%; color: #ff8e9d; }
+.complete-stamp {
+  position: absolute; z-index: 15; right: 4%; bottom: 5%; padding: 9px 17px; border: 6px solid #f06e55;
+  border-radius: 50%; color: #f06e55; background: rgba(255,255,255,.88); font-size: clamp(25px, 4vw, 42px);
+  font-weight: 900; transform: rotate(-10deg); animation: stamp .5s cubic-bezier(.2,1.7,.4,1);
+}
+@keyframes stamp { from { transform: scale(2.5) rotate(-10deg); opacity: 0; } }
+.complete-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; margin: -32px auto 10px; }
+.save-button { background: linear-gradient(#59c96f, #36a354); font-size: clamp(17px, 2.7vw, 27px); }
+.reset-button { background: linear-gradient(#71bced, #3f91d1); font-size: clamp(17px, 2.7vw, 27px); }
+
+.flying-fruit {
+  position: fixed; z-index: 100; pointer-events: none; aspect-ratio: 1; object-fit: contain;
+  animation: fly-to-table .62s cubic-bezier(.35,.04,.2,1) forwards;
+  filter: drop-shadow(0 7px 3px rgba(80,35,10,.25));
+}
+@keyframes fly-to-table { to { transform: translate(var(--fly-x), var(--fly-y)) scale(.8) rotate(360deg); opacity: .4; } }
+footer { text-align: center; margin-top: 5px; color: #9c653d; font-size: 13px; font-weight: 700; }
+
+@media (max-width: 620px) {
+  .game-shell { padding-top: 7px; }
+  .game-title { margin-bottom: 5px; }
+  .playfield, .decorate-area { height: min(58svh, 540px); min-height: 390px; border-width: 5px; }
+  .instruction, .decorate-instruction { min-height: 86px; top: 8px; padding: 8px 11px; gap: 5px; border-width: 4px; }
+  .bouncing-fruit { width: 68px; height: 68px; }
+  .table-wrap { width: 100%; height: 114px; }
+  .table-surface { min-height: 76px; padding-inline: 1%; }
+  .table-legs { top: 84px; }
+  .table-fruit { width: 11vw; height: 11vw; min-height: 41px; }
+  .pudding-stage { top: 103px; }
+  .big-action { padding: 13px 22px; border-width: 4px; }
+  .complete-actions { margin-top: -25px; }
+}
+
+/* iPad portrait and landscape are the primary play sizes. */
+@media (min-width: 700px) and (max-width: 1180px) and (pointer: coarse) {
+  .game-shell { padding: 14px 18px 8px; }
+  .game-card { width: min(960px, 100%); }
+  .playfield, .decorate-area { height: clamp(470px, 61svh, 690px); }
+  .bouncing-fruit { width: 86px; height: 86px; }
+  .instruction, .decorate-instruction { min-height: 92px; font-size: clamp(27px, 3.5vw, 38px); }
+  .table-surface { min-height: 98px; }
+  .table-fruit { width: min(86px, 10vw); height: min(86px, 10vw); }
+  .placed-fruit { width: clamp(82px, 12vw, 106px); height: clamp(82px, 12vw, 106px); }
+  .big-action { min-height: 70px; padding-inline: 38px; }
+}
+
+@media (min-width: 900px) and (max-height: 850px) and (pointer: coarse) {
+  .playfield, .decorate-area { height: 480px; }
+  .table-surface { min-height: 80px; }
+  .table-wrap { height: 108px; }
+  .table-legs { top: 85px; }
+}
+
+@media (max-height: 700px) {
+  .playfield, .decorate-area { height: 470px; min-height: 370px; }
+  .table-wrap { height: 102px; }
+  .table-surface { min-height: 68px; }
+  .table-legs { top: 76px; }
+  .table-fruit { max-height: 60px; }
+  footer { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .instruction-star, .table-fruit.is-draggable, .sparkle { animation: none; }
+}
