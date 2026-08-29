@@ -70,6 +70,7 @@ export default function FruitPuddingGame() {
   const [flies, setFlies] = useState<Fly[]>([]);
   const [decor, setDecor] = useState<Record<string, { x: number; y: number }>>({});
   const [isDragging, setIsDragging] = useState(false);
+  const [dragVisual, setDragVisual] = useState<{ id: string; x: number; y: number } | null>(null);
 
   const playSound = useCallback((kind: "ok" | "ng") => {
     const audio = new Audio(`${ASSET_BASE}${kind}.m4a`);
@@ -203,7 +204,6 @@ export default function FruitPuddingGame() {
     fruit.status = "moving";
     const nextNeeded = { ...remainingRef.current, [fruit.type]: needed - 1 };
     remainingRef.current = nextNeeded;
-    setRound(nextNeeded);
 
     const source = element.getBoundingClientRect();
     const table = tableRef.current?.getBoundingClientRect();
@@ -230,10 +230,13 @@ export default function FruitPuddingGame() {
 
     const finishedRound = Object.values(nextNeeded).every((count) => !count);
     if (finishedRound) {
-      setRound({});
       remainingRef.current = {};
       window.setTimeout(() => {
-        if (fruitsRef.current.some((item) => item.status === "active")) chooseRound();
+        if (fruitsRef.current.some((item) => item.status === "active")) {
+          chooseRound();
+        } else {
+          setRound({});
+        }
       }, 720);
     }
   }, [chooseRound, phase, playSound, tableOrder.length]);
@@ -268,22 +271,44 @@ export default function FruitPuddingGame() {
     event.preventDefault();
     dragRef.current = id;
     setIsDragging(true);
-    placeFromPointer(id, event.clientX, event.clientY);
+    setDragVisual({ id, x: event.clientX, y: event.clientY });
   };
 
   useEffect(() => {
     if (!isDragging) return;
     const move = (event: PointerEvent) => {
-      if (dragRef.current) placeFromPointer(dragRef.current, event.clientX, event.clientY);
+      if (dragRef.current) setDragVisual({ id: dragRef.current, x: event.clientX, y: event.clientY });
     };
-    const end = () => { dragRef.current = null; setIsDragging(false); };
+    const end = (event: PointerEvent) => {
+      const id = dragRef.current;
+      const table = tableRef.current?.getBoundingClientRect();
+      if (id) {
+        if (table && event.clientY >= table.top - 18) {
+          setDecor((current) => {
+            const next = { ...current };
+            delete next[id];
+            return next;
+          });
+        } else {
+          placeFromPointer(id, event.clientX, event.clientY);
+        }
+      }
+      dragRef.current = null;
+      setDragVisual(null);
+      setIsDragging(false);
+    };
+    const cancel = () => {
+      dragRef.current = null;
+      setDragVisual(null);
+      setIsDragging(false);
+    };
     window.addEventListener("pointermove", move, { passive: false });
     window.addEventListener("pointerup", end);
-    window.addEventListener("pointercancel", end);
+    window.addEventListener("pointercancel", cancel);
     return () => {
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", end);
-      window.removeEventListener("pointercancel", end);
+      window.removeEventListener("pointercancel", cancel);
     };
   }, [isDragging, placeFromPointer]);
 
@@ -383,7 +408,7 @@ export default function FruitPuddingGame() {
               {tableFruits.filter((fruit) => decor[fruit.id]).map((fruit) => (
                 <button
                   key={fruit.id}
-                  className="placed-fruit"
+                  className={`placed-fruit ${dragVisual?.id === fruit.id ? "is-drag-source" : ""}`}
                   style={{ left: decor[fruit.id].x, top: decor[fruit.id].y }}
                   onPointerDown={(event) => beginDrag(fruit.id, event)}
                   aria-label={`${INFO[fruit.type].name}をうごかす`}
@@ -405,7 +430,7 @@ export default function FruitPuddingGame() {
                 <div className="table-slot" key={fruit.id}>
                   {phase === "collect" || !isOnStage ? (
                     <button
-                      className={`table-fruit ${phase !== "collect" ? "is-draggable" : ""}`}
+                      className={`table-fruit ${phase !== "collect" ? "is-draggable" : ""} ${dragVisual?.id === fruit.id ? "is-drag-source" : ""}`}
                       onPointerDown={phase !== "collect" ? (event) => beginDrag(fruit.id, event) : undefined}
                       aria-label={phase !== "collect" ? `${INFO[fruit.type].name}をもりつける` : INFO[fruit.type].name}
                     >
@@ -427,9 +452,8 @@ export default function FruitPuddingGame() {
           <button
             className="big-action finish-button"
             onClick={() => setPhase("complete")}
-            disabled={Object.keys(decor).length < 8}
           >
-            {Object.keys(decor).length < 8 ? `あと ${8 - Object.keys(decor).length}こ` : "かんせい！"}
+            かんせい！
           </button>
         )}
         {phase === "complete" && (
@@ -449,6 +473,17 @@ export default function FruitPuddingGame() {
           style={{ left: fly.left, top: fly.top, width: fly.width, "--fly-x": `${fly.dx}px`, "--fly-y": `${fly.dy}px` } as React.CSSProperties}
         />
       ))}
+      {dragVisual && (() => {
+        const fruit = fruitsRef.current.find((item) => item.id === dragVisual.id);
+        return fruit ? (
+          <img
+            className="dragging-fruit"
+            src={INFO[fruit.type].src}
+            alt=""
+            style={{ left: dragVisual.x, top: dragVisual.y }}
+          />
+        ) : null;
+      })()}
       <footer>おうちの ひとと いっしょに あそんでね</footer>
     </main>
   );

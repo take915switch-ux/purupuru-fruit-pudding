@@ -86,6 +86,7 @@ button { font: inherit; }
 .table-fruit { width: min(78px, 10vw); height: min(78px, 10vw); padding: 0; border: 0; background: transparent; filter: drop-shadow(0 5px 2px rgba(53,26,9,.3)); }
 .table-fruit img, .placed-fruit img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
 .table-fruit.is-draggable { cursor: grab; animation: ready-drag 1.2s ease-in-out infinite alternate; touch-action: none; }
+.is-drag-source { opacity: 0 !important; }
 @keyframes ready-drag { to { transform: translateY(-5px); } }
 .empty-slot { color: rgba(255,255,255,.35); font-size: 30px; }
 .table-legs { position: absolute; left: 7%; right: 7%; top: 98px; display: flex; justify-content: space-between; }
@@ -128,6 +129,11 @@ button { font: inherit; }
   position: fixed; z-index: 100; pointer-events: none; aspect-ratio: 1; object-fit: contain;
   animation: fly-to-table .62s cubic-bezier(.35,.04,.2,1) forwards;
   filter: drop-shadow(0 7px 3px rgba(80,35,10,.25));
+}
+.dragging-fruit {
+  position: fixed; z-index: 130; width: clamp(76px, 12vw, 102px); height: clamp(76px, 12vw, 102px);
+  transform: translate(-50%, -50%) scale(1.08); object-fit: contain; pointer-events: none;
+  filter: drop-shadow(0 12px 6px rgba(80,35,10,.32)); will-change: left, top;
 }
 @keyframes fly-to-table { to { transform: translate(var(--fly-x), var(--fly-y)) scale(.8) rotate(360deg); opacity: .4; } }
 footer { text-align: center; margin-top: 5px; color: #9c653d; font-size: 13px; font-weight: 700; }
