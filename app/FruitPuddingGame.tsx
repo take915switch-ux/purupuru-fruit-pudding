@@ -63,6 +63,9 @@ export default function FruitPuddingGame() {
   const fruitsRef = useRef<Fruit[]>([]);
   const remainingRef = useRef<Partial<Record<FruitType, number>>>({});
   const dragRef = useRef<string | null>(null);
+  const pointersRef = useRef(new Map<number, { x: number; y: number }>());
+  const pinchRef = useRef<{ id: string; startDistance: number; startScale: number } | null>(null);
+  const scalesRef = useRef<Record<string, number>>({});
   const [phase, setPhase] = useState<Phase>("collect");
   const [renderTick, setRenderTick] = useState(0);
   const [round, setRound] = useState<Partial<Record<FruitType, number>>>({});
@@ -71,6 +74,7 @@ export default function FruitPuddingGame() {
   const [decor, setDecor] = useState<Record<string, { x: number; y: number }>>({});
   const [isDragging, setIsDragging] = useState(false);
   const [dragVisual, setDragVisual] = useState<{ id: string; x: number; y: number } | null>(null);
+  const [fruitScales, setFruitScales] = useState<Record<string, number>>({});
 
   const playSound = useCallback((kind: "ok" | "ng") => {
     const audio = new Audio(`${ASSET_BASE}${kind}.m4a`);
@@ -128,6 +132,8 @@ export default function FruitPuddingGame() {
     fruitsRef.current = shuffle(placed);
     setTableOrder([]);
     setDecor({});
+    scalesRef.current = {};
+    setFruitScales({});
     setFlies([]);
     setRenderTick((v) => v + 1);
     window.setTimeout(chooseRound, 100);
@@ -268,7 +274,10 @@ export default function FruitPuddingGame() {
   }, []);
 
   const beginDrag = (id: string, event: React.PointerEvent) => {
+    if (phase !== "decorate") return;
     event.preventDefault();
+    pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (dragRef.current) return;
     dragRef.current = id;
     setIsDragging(true);
     setDragVisual({ id, x: event.clientX, y: event.clientY });
@@ -276,10 +285,51 @@ export default function FruitPuddingGame() {
 
   useEffect(() => {
     if (!isDragging) return;
+    const startPinch = () => {
+      const id = dragRef.current;
+      const points = [...pointersRef.current.values()];
+      if (!id || points.length < 2) return;
+      pinchRef.current = {
+        id,
+        startDistance: Math.max(1, Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y)),
+        startScale: scalesRef.current[id] ?? 1,
+      };
+    };
+    const down = (event: PointerEvent) => {
+      if (!dragRef.current) return;
+      if (!pointersRef.current.has(event.pointerId)) {
+        pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      }
+      if (pointersRef.current.size === 2 && !pinchRef.current) startPinch();
+    };
     const move = (event: PointerEvent) => {
-      if (dragRef.current) setDragVisual({ id: dragRef.current, x: event.clientX, y: event.clientY });
+      const id = dragRef.current;
+      if (!id || !pointersRef.current.has(event.pointerId)) return;
+      pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      const points = [...pointersRef.current.values()];
+      if (points.length >= 2) {
+        if (!pinchRef.current) startPinch();
+        const pinch = pinchRef.current;
+        if (pinch) {
+          const distance = Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
+          const scale = Math.max(0.5, Math.min(2, pinch.startScale * distance / pinch.startDistance));
+          scalesRef.current = { ...scalesRef.current, [id]: scale };
+          setFruitScales(scalesRef.current);
+          setDragVisual({ id, x: (points[0].x + points[1].x) / 2, y: (points[0].y + points[1].y) / 2 });
+        }
+      } else {
+        setDragVisual({ id, x: event.clientX, y: event.clientY });
+      }
     };
     const end = (event: PointerEvent) => {
+      if (!pointersRef.current.has(event.pointerId)) return;
+      pointersRef.current.delete(event.pointerId);
+      const remainingPointer = [...pointersRef.current.values()][0];
+      if (remainingPointer) {
+        pinchRef.current = null;
+        if (dragRef.current) setDragVisual({ id: dragRef.current, x: remainingPointer.x, y: remainingPointer.y });
+        return;
+      }
       const id = dragRef.current;
       const table = tableRef.current?.getBoundingClientRect();
       if (id) {
@@ -294,18 +344,23 @@ export default function FruitPuddingGame() {
         }
       }
       dragRef.current = null;
+      pinchRef.current = null;
       setDragVisual(null);
       setIsDragging(false);
     };
     const cancel = () => {
       dragRef.current = null;
+      pointersRef.current.clear();
+      pinchRef.current = null;
       setDragVisual(null);
       setIsDragging(false);
     };
+    window.addEventListener("pointerdown", down);
     window.addEventListener("pointermove", move, { passive: false });
     window.addEventListener("pointerup", end);
     window.addEventListener("pointercancel", cancel);
     return () => {
+      window.removeEventListener("pointerdown", down);
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", end);
       window.removeEventListener("pointercancel", cancel);
@@ -315,36 +370,42 @@ export default function FruitPuddingGame() {
   const saveImage = async () => {
     const stage = stageRef.current;
     if (!stage) return;
+    const stageRect = stage.getBoundingClientRect();
+    const outputScale = 1200 / stageRect.width;
     const canvas = document.createElement("canvas");
     canvas.width = 1200;
-    canvas.height = 900;
+    canvas.height = Math.round(stageRect.height * outputScale);
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    gradient.addColorStop(0, "#fff8df");
-    gradient.addColorStop(1, "#ffdca4");
+    gradient.addColorStop(0, "#fffdf2");
+    gradient.addColorStop(0.48, "#fff6c9");
+    gradient.addColorStop(1, "#ffd7b0");
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#7e431f";
-    ctx.font = "bold 62px sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText("わたしの フルーツプリン", canvas.width / 2, 82);
 
+    const drawContained = (image: HTMLImageElement, elementRect: DOMRect) => {
+      const boxX = (elementRect.left - stageRect.left) * outputScale;
+      const boxY = (elementRect.top - stageRect.top) * outputScale;
+      const boxWidth = elementRect.width * outputScale;
+      const boxHeight = elementRect.height * outputScale;
+      const fit = Math.min(boxWidth / image.naturalWidth, boxHeight / image.naturalHeight);
+      const width = image.naturalWidth * fit;
+      const height = image.naturalHeight * fit;
+      ctx.drawImage(image, boxX + (boxWidth - width) / 2, boxY + (boxHeight - height) / 2, width, height);
+    };
+
+    const puddingElement = stage.querySelector<HTMLImageElement>(".pudding");
     const pudding = await loadImage(`${ASSET_BASE}pudding.png`);
-    ctx.drawImage(pudding, 210, 150, 780, 630);
-    const rect = stage.getBoundingClientRect();
+    if (puddingElement) drawContained(pudding, puddingElement.getBoundingClientRect());
+
     for (const fruit of tableFruits) {
-      const position = decor[fruit.id];
-      if (!position) continue;
+      if (!decor[fruit.id]) continue;
+      const element = stage.querySelector<HTMLButtonElement>(`[data-fruit-id="${fruit.id}"]`);
+      if (!element) continue;
       const image = await loadImage(INFO[fruit.type].src);
-      const x = (position.x / rect.width) * canvas.width;
-      const y = 120 + (position.y / rect.height) * 690;
-      const size = Math.min(150, Math.max(105, (88 / rect.width) * canvas.width));
-      ctx.drawImage(image, x, y, size, size);
+      drawContained(image, element.getBoundingClientRect());
     }
-    ctx.fillStyle = "#9a5a2e";
-    ctx.font = "bold 36px sans-serif";
-    ctx.fillText("できあがり！", canvas.width / 2, 860);
     const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
     if (!blob) return;
     const file = new File([blob], "fruit-pudding.png", { type: "image/png" });
@@ -366,6 +427,8 @@ export default function FruitPuddingGame() {
   const reset = () => {
     setPhase("collect");
     setDecor({});
+    scalesRef.current = {};
+    setFruitScales({});
     setTableOrder([]);
     window.setTimeout(initialize, 50);
   };
@@ -408,9 +471,10 @@ export default function FruitPuddingGame() {
               {tableFruits.filter((fruit) => decor[fruit.id]).map((fruit) => (
                 <button
                   key={fruit.id}
+                  data-fruit-id={fruit.id}
                   className={`placed-fruit ${dragVisual?.id === fruit.id ? "is-drag-source" : ""}`}
-                  style={{ left: decor[fruit.id].x, top: decor[fruit.id].y }}
-                  onPointerDown={(event) => beginDrag(fruit.id, event)}
+                  style={{ left: decor[fruit.id].x, top: decor[fruit.id].y, transform: `scale(${fruitScales[fruit.id] ?? 1})` }}
+                  onPointerDown={phase === "decorate" ? (event) => beginDrag(fruit.id, event) : undefined}
                   aria-label={`${INFO[fruit.type].name}をうごかす`}
                 >
                   <img src={INFO[fruit.type].src} alt="" draggable={false} />
@@ -430,9 +494,9 @@ export default function FruitPuddingGame() {
                 <div className="table-slot" key={fruit.id}>
                   {phase === "collect" || !isOnStage ? (
                     <button
-                      className={`table-fruit ${phase !== "collect" ? "is-draggable" : ""} ${dragVisual?.id === fruit.id ? "is-drag-source" : ""}`}
-                      onPointerDown={phase !== "collect" ? (event) => beginDrag(fruit.id, event) : undefined}
-                      aria-label={phase !== "collect" ? `${INFO[fruit.type].name}をもりつける` : INFO[fruit.type].name}
+                      className={`table-fruit ${phase === "decorate" ? "is-draggable" : ""} ${dragVisual?.id === fruit.id ? "is-drag-source" : ""}`}
+                      onPointerDown={phase === "decorate" ? (event) => beginDrag(fruit.id, event) : undefined}
+                      aria-label={phase === "decorate" ? `${INFO[fruit.type].name}をもりつける` : INFO[fruit.type].name}
                     >
                       <img src={INFO[fruit.type].src} alt="" draggable={false} />
                     </button>
@@ -480,11 +544,10 @@ export default function FruitPuddingGame() {
             className="dragging-fruit"
             src={INFO[fruit.type].src}
             alt=""
-            style={{ left: dragVisual.x, top: dragVisual.y }}
+            style={{ left: dragVisual.x, top: dragVisual.y, "--drag-scale": fruitScales[fruit.id] ?? 1 } as React.CSSProperties}
           />
         ) : null;
       })()}
-      <footer>おうちの ひとと いっしょに あそんでね</footer>
     </main>
   );
 }

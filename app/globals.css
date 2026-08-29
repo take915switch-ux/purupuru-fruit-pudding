@@ -99,6 +99,7 @@ button { font: inherit; }
 }
 .big-action:active:not(:disabled) { transform: translateY(5px); box-shadow: 0 2px 0 rgba(90,43,17,.28); }
 .decorate-button, .finish-button { margin: -34px auto 10px; background: linear-gradient(#ffad38, #f77b20); animation: button-pop .7s cubic-bezier(.2,1.7,.4,1); }
+.finish-button { margin: 14px auto 10px; }
 @keyframes button-pop { from { transform: scale(.2) rotate(-5deg); opacity: 0; } }
 .finish-button:disabled { background: #aaa697; cursor: default; }
 
@@ -111,7 +112,7 @@ button { font: inherit; }
   padding: 0; border: 0; background: transparent; cursor: grab; touch-action: none;
   filter: drop-shadow(0 5px 3px rgba(75,34,14,.25)); animation: fruit-land .35s cubic-bezier(.2,1.5,.4,1);
 }
-.placed-fruit:active { cursor: grabbing; transform: scale(1.08); }
+.placed-fruit:active { cursor: grabbing; }
 @keyframes fruit-land { from { transform: scale(.25); } }
 .sparkle { position: absolute; color: #ffb900; font-size: 42px; animation: twinkle 1s ease-in-out infinite alternate; }
 .sparkle-one { left: 8%; top: 20%; }.sparkle-two { right: 8%; top: 30%; color: #ff8e9d; }
@@ -132,11 +133,10 @@ button { font: inherit; }
 }
 .dragging-fruit {
   position: fixed; z-index: 130; width: clamp(76px, 12vw, 102px); height: clamp(76px, 12vw, 102px);
-  transform: translate(-50%, -50%) scale(1.08); object-fit: contain; pointer-events: none;
+  transform: translate(-50%, -50%) scale(var(--drag-scale, 1)); object-fit: contain; pointer-events: none;
   filter: drop-shadow(0 12px 6px rgba(80,35,10,.32)); will-change: left, top;
 }
 @keyframes fly-to-table { to { transform: translate(var(--fly-x), var(--fly-y)) scale(.8) rotate(360deg); opacity: .4; } }
-footer { text-align: center; margin-top: 5px; color: #9c653d; font-size: 13px; font-weight: 700; }
 
 @media (max-width: 620px) {
   .game-shell { padding-top: 7px; }
@@ -179,7 +179,6 @@ footer { text-align: center; margin-top: 5px; color: #9c653d; font-size: 13px; f
   .table-surface { min-height: 68px; }
   .table-legs { top: 76px; }
   .table-fruit { max-height: 60px; }
-  footer { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
