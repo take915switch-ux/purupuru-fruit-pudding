@@ -113,12 +113,12 @@ export default function FruitPuddingGame() {
     for (const type of TYPES) {
       for (let copy = 0; copy < 2; copy += 1) {
         let x = RADIUS + Math.random() * Math.max(1, width - RADIUS * 2);
-        let y = 108 + RADIUS + Math.random() * Math.max(1, height - 108 - RADIUS * 2);
+        let y = RADIUS + Math.random() * Math.max(1, height - RADIUS * 2);
         for (let attempt = 0; attempt < 80; attempt += 1) {
           const clear = placed.every((other) => Math.hypot(other.x - x, other.y - y) > RADIUS * 2.15);
           if (clear) break;
           x = RADIUS + Math.random() * Math.max(1, width - RADIUS * 2);
-          y = 108 + RADIUS + Math.random() * Math.max(1, height - 108 - RADIUS * 2);
+          y = RADIUS + Math.random() * Math.max(1, height - RADIUS * 2);
         }
         const speed = 82 + Math.random() * 55;
         const angle = Math.random() * Math.PI * 2;
@@ -168,7 +168,7 @@ export default function FruitPuddingGame() {
         fruit.y += fruit.vy * dt;
         if (fruit.x < RADIUS) { fruit.x = RADIUS; fruit.vx = Math.abs(fruit.vx); }
         if (fruit.x > width - RADIUS) { fruit.x = width - RADIUS; fruit.vx = -Math.abs(fruit.vx); }
-        if (fruit.y < 108 + RADIUS) { fruit.y = 108 + RADIUS; fruit.vy = Math.abs(fruit.vy); }
+        if (fruit.y < RADIUS) { fruit.y = RADIUS; fruit.vy = Math.abs(fruit.vy); }
         if (fruit.y > height - RADIUS) { fruit.y = height - RADIUS; fruit.vy = -Math.abs(fruit.vy); }
       }
       for (let i = 0; i < active.length; i += 1) {
@@ -492,13 +492,15 @@ export default function FruitPuddingGame() {
       </header>
 
       <section className="game-card">
+        <div className="prompt-bar" aria-live="polite">
+          {phase === "collect"
+            ? instruction
+            : phase === "complete"
+              ? "かんせい！ とっても おいしそう！"
+              : "フルーツを ドラッグして もりつけよう！"}
+        </div>
         {phase === "collect" ? (
           <div className="playfield" ref={playfieldRef}>
-            <div className="instruction" aria-live="polite">
-              <span className="instruction-star">★</span>
-              <strong>{instruction}</strong>
-              <span className="instruction-star">★</span>
-            </div>
             {fruitsRef.current.filter((fruit) => fruit.status === "active").map((fruit) => (
               <button
                 className={`bouncing-fruit fruit-${fruit.type}`}
@@ -513,9 +515,6 @@ export default function FruitPuddingGame() {
           </div>
         ) : (
           <div className="decorate-area">
-            <div className="decorate-instruction">
-              {phase === "complete" ? "かんせい！ とっても おいしそう！" : "フルーツを ドラッグして もりつけよう！"}
-            </div>
             <div
               className="pudding-stage"
               ref={stageRef}
