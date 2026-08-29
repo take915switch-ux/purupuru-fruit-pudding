@@ -492,7 +492,7 @@ export default function FruitPuddingGame() {
       </header>
 
       <section className="game-card">
-        <div className="prompt-bar" aria-live="polite">
+        <div className={`prompt-bar ${phase === "collect" && instruction.length > 20 ? "is-long" : ""}`} aria-live="polite">
           {phase === "collect"
             ? instruction
             : phase === "complete"

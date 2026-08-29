@@ -54,12 +54,14 @@ button { font: inherit; }
   background: repeating-linear-gradient(165deg, transparent 0 34px, rgba(76,157,76,.1) 35px 39px);
 }
 .prompt-bar {
-  width: min(92%, 720px); min-height: 48px; margin: 0 auto 8px; padding: 7px 18px;
+  width: min(92%, 720px); height: 48px; min-height: 48px; max-height: 48px; margin: 0 auto 8px; padding: 7px 18px;
   display: flex; align-items: center; justify-content: center; text-align: center;
   border: 3px solid #ffb448; border-radius: 22px; background: rgba(255,255,255,.94);
   box-shadow: 0 4px 0 rgba(126, 67, 31, .13); color: #703a1d;
-  font-size: clamp(17px, 2.4vw, 25px); line-height: 1.3; font-weight: 800;
+  font-size: clamp(15px, 2.1vw, 21px); line-height: 1; font-weight: 800;
+  white-space: nowrap; overflow: hidden; letter-spacing: -.01em;
 }
+.prompt-bar.is-long { font-size: clamp(13px, 1.8vw, 18px); letter-spacing: -.045em; }
 @keyframes twinkle { to { transform: scale(1.35) rotate(12deg); } }
 
 .bouncing-fruit {
@@ -143,7 +145,8 @@ button { font: inherit; }
   .game-shell { padding-top: 7px; }
   .game-title { margin-bottom: 5px; }
   .playfield, .decorate-area { height: min(58svh, 540px); min-height: 390px; border-width: 5px; }
-  .prompt-bar { min-height: 43px; margin-bottom: 6px; padding: 6px 10px; }
+  .prompt-bar { height: 43px; min-height: 43px; max-height: 43px; margin-bottom: 6px; padding: 6px 8px; font-size: clamp(13px, 3.8vw, 17px); }
+  .prompt-bar.is-long { font-size: clamp(11px, 3.1vw, 14px); }
   .bouncing-fruit { width: 68px; height: 68px; }
   .table-wrap { width: 100%; height: 114px; }
   .table-surface { min-height: 76px; padding-inline: 1%; }
@@ -159,7 +162,8 @@ button { font: inherit; }
   .game-card { width: min(960px, 100%); }
   .playfield, .decorate-area { height: clamp(470px, 61svh, 690px); }
   .bouncing-fruit { width: 86px; height: 86px; }
-  .prompt-bar { min-height: 52px; font-size: clamp(20px, 2.6vw, 28px); }
+  .prompt-bar { height: 50px; min-height: 50px; max-height: 50px; font-size: clamp(16px, 2vw, 20px); }
+  .prompt-bar.is-long { font-size: clamp(14px, 1.75vw, 17px); }
   .table-surface { min-height: 98px; }
   .table-fruit { width: min(86px, 10vw); height: min(86px, 10vw); }
   .placed-fruit { width: clamp(82px, 12vw, 106px); height: clamp(82px, 12vw, 106px); }
